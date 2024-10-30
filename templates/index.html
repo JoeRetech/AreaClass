@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Classification</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Light background */
+            color: #343a40; /* Dark text */
+        }
+
+        .form-box {
+            background: #ffffff; /* White background for the form */
+            border-radius: 16px;
+            padding: 30px;
+            margin-top: 50px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .preview-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #28a745; /* Green border for the image */
+            border-radius: 10px; /* Rounded corners for the image */
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #28a745; /* Green color for the result text */
+        }
+
+        h1 {
+            color: #28a745; /* Green color for the title */
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="form-box">
+                <h1 class="text-center mb-4">Area Classification</h1>
+                <form id="uploadForm">
+                    <div class="form-group">
+                        <input type="file" id="imageInput" class="form-control" accept="image/*" required>
+                    </div>
+                </form>
+                <div class="preview-container" id="previewContainer" style="display: none;">
+                    <h2>Image Preview:</h2>
+                    <img id="imagePreview" src="#" alt="Image Preview">
+                    <div class="result" id="result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS and dependencies (optional for additional components) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    document.getElementById('imageInput').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('previewContainer').style.display = 'block';
+                getLocationAndPredict(file);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    function getLocationAndPredict(file) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
+                    predictAreaCondition(file, location);
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                    predictAreaCondition(file, 'Location not available');
+                }
+            );
+        } else {
+            predictAreaCondition(file, 'Geolocation not supported');
+        }
+    }
+
+    function predictAreaCondition(file, location) {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('location', location);
+
+        fetch('/predict', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                document.getElementById('result').innerHTML = `<strong>Error:</strong> ${data.error}`;
+            } else {
+                document.getElementById('result').innerHTML = `<strong>Classification:</strong> ${data.prediction}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('result').innerHTML = '<strong>Error fetching prediction</strong>';
+        });
+    }
+</script>
+
+</body>
+</html>
