@@ -1,4 +1,4 @@
 Flask
 tensorflow
 opencv-python
-opencv-contrib-pythongit 
+opencv-contrib-python
