@@ -26,17 +26,17 @@
             text-align: center;
         }
 
-        img {
+        img, video {
             max-width: 100%;
             height: auto;
-            border: 2px solid #28a745; /* Green border for the image */
-            border-radius: 10px; /* Rounded corners for the image */
+            border: 2px solid #28a745; /* Green border */
+            border-radius: 10px; /* Rounded corners */
         }
 
         .result {
             margin-top: 20px;
             font-size: 1.5rem;
-            color: #28a745; /* Green color for the result text */
+            color: #28a745; /* Green color */
         }
 
         h1 {
@@ -52,11 +52,25 @@
         <div class="col-md-8">
             <div class="form-box">
                 <h1 class="text-center mb-4">Area Classification</h1>
+                
+                <!-- File Upload -->
                 <form id="uploadForm">
                     <div class="form-group">
-                        <input type="file" id="imageInput" class="form-control" accept="image/*" required>
+                        <input type="file" id="imageInput" class="form-control" accept="image/*">
                     </div>
                 </form>
+
+                <!-- Real-Time Camera -->
+                <div class="text-center">
+                    <button id="cameraButton" class="btn btn-success mb-2">Use Camera</button>
+                </div>
+
+                <div class="preview-container text-center" id="cameraContainer" style="display: none;">
+                    <video id="video" autoplay playsinline></video> <br>
+                    <button id="captureButton" class="btn btn-primary mt-2">Capture</button>
+                </div>
+
+                <!-- Preview Image and Result -->
                 <div class="preview-container" id="previewContainer" style="display: none;">
                     <h2>Image Preview:</h2>
                     <img id="imagePreview" src="#" alt="Image Preview">
@@ -73,6 +87,7 @@
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
+    // File Upload Image Preview
     document.getElementById('imageInput').addEventListener('change', function (event) {
         const file = event.target.files[0];
         if (file) {
@@ -86,6 +101,44 @@
         }
     });
 
+    // Real-Time Camera Access and Capture
+    document.getElementById('cameraButton').addEventListener('click', function () {
+        const cameraContainer = document.getElementById('cameraContainer');
+        cameraContainer.style.display = 'block';
+
+        // Access the camera
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+            })
+            .catch(error => console.error('Error accessing camera:', error));
+    });
+
+    document.getElementById('captureButton').addEventListener('click', function () {
+        const video = document.getElementById('video');
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        // Capture the image
+        const context = canvas.getContext('2d');
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        document.getElementById('imagePreview').src = dataUrl;
+        document.getElementById('previewContainer').style.display = 'block';
+
+        // Convert the DataURL to a file object and get location
+        fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                const file = new File([blob], 'capture.png', { type: 'image/png' });
+                getLocationAndPredict(file);
+            });
+    });
+
+    // Fetch Location and Prediction
     function getLocationAndPredict(file) {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -103,6 +156,7 @@
         }
     }
 
+    // Prediction API Call
     function predictAreaCondition(file, location) {
         const formData = new FormData();
         formData.append('image', file);

@@ -8,10 +8,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import os
-from dotenv import load_dotenv  # Import dotenv for environment variables
 
-# Load environment variables from .env file
-load_dotenv()
 
 app = Flask(__name__)
 UPLOAD_FOLDER = 'static/uploader/'
@@ -24,7 +21,7 @@ categories = ['Clean', 'Dirty']
 
 def send_email_with_image(prediction, location, image_path):
     sender = "amlananshu6a@gmail.com"
-    receiver = "retechjoe@gmail.com"
+    receiver = "srinithivminiproject@gmail.com"
     password =  "qizzyggtirnxnmmn"
 
     msg = MIMEMultipart()
@@ -55,7 +52,7 @@ def send_email_with_image(prediction, location, image_path):
 
 @app.route("/", methods=['GET'])
 def home():
-    return render_template('index2.html')
+    return render_template('index.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -87,5 +84,4 @@ def predict():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-if __name__ == '__main__':
-    app.run(debug=True)
+
